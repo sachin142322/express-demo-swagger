@@ -1,0 +1,47 @@
+openapi: "3.0.0"
+info:
+  title: 'My Demo Swagger Api'  
+servers:
+  - url: http://localhost:8080
+
+tags:
+  - name: Login
+    description: login managing api
+    
+definations:
+  schemas:
+  failureResponse:
+    unauthorized:
+      type: object
+      properties:
+        status:
+          type: string
+        error:
+          type: object
+          properties:
+            statusCode:
+              type: string
+            message:
+              type: string 
+
+paths:
+  /auth/login:
+    post:
+      summary: login api
+      description: you can login
+      tags: [Login]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                    type: string
+      responses:
+        200:
+          description: user logged in successfully
+              

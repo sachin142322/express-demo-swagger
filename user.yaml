@@ -1,0 +1,1003 @@
+openapi: "3.0.0"
+info:
+  title: 'My Demo Swagger Api'  
+servers:
+  - url: http://localhost:8080
+
+tags:
+  - name: Login
+    description: login managing api
+  - name: Users
+    description: The users managing api
+  - name: Posts
+    description: Users Posts managing api
+  - name: Comments
+    description: Users Comments managing api    
+components: 
+  securitySchemes: 
+    bearerAuth: 
+      type: 'http'
+      in: 'header'
+      name: 'Authorization'
+      description: 'Bearer token to access these api endpoints'
+      scheme: 'bearer'
+      bearerFormat: 'JWT'
+  security:
+    type: array
+    items:
+      - bearerAuth: []
+
+
+paths:
+  /auth/login:
+    post:
+      summary: login api
+      description: you can login
+      tags: [Login]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                    type: string
+      responses:
+        200:
+          description: user logged in successfully
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+        401:
+          description: Unauthorized user
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+  /auth/refreshToken:
+    post:
+      summary: refresh token generater
+      description: you can generate new access token and refresh token 
+      tags: [Login]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: refresh token generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: string
+                  message:
+                    type: string
+        401:
+          description: Unauthorized user
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+  /users:
+    get:
+      summary: Fetch all users
+      tags: [Users]
+      produces:
+        - application/json
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: user fetched successfully
+          content:
+            application/json:
+              schema: 
+                type: object
+                required:
+                  - status
+                  - message
+                  - data
+                properties:
+                  status:
+                    type: string
+                  message: 
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - name
+                        - userName
+                        - email
+                        - role
+                      properties:
+                        name:
+                          type: string
+                          description: this is user name
+                        userName:
+                          type: string
+                          description: this is userName must be unique
+                        email:
+                          type: string
+                          description: this is user email
+                        role:
+                          type: string
+                          description: this is user role
+        401:
+          description: Unauthorized user
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        500:
+          description: "Internal Server Error"
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+    post:
+      summary: create user/sign up
+      tags: [Users]
+      description: create user with few details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: 
+              $ref: '#/definations/schemas/userSchemaForCreateUser'
+      responses:
+        201:
+          description: user created successfully  
+          content:
+            application/json:
+              schema: 
+                $ref: '#definations/schemas/userSchemaForGet'
+        409:
+          description: conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+          
+
+  /users/{userId}:
+    get:
+      summary: Fetch user
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: userId 
+          required: true
+          description: find user by id
+      responses:
+        200:
+          description: user fetched successfully
+          content:
+            application/json:
+              schema: 
+                $ref: '#/definations/schemas/userSchemaForGet'
+        401:
+          description: Unauthorized user
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        404:
+          description: user does not exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+    delete:
+      summary: delete user
+      description: you can delete user with userId
+      tags: [Users]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: userId 
+          required: true
+          description: delete user by needed userId
+      responses:
+        200:
+          description: user deleted successfully
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+        401:
+          description: Unauthorized user
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        404:
+          description: user does not exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+    put:
+      summary: update user details
+      tags: [Users]
+      description: you can update user deatils 
+      security:
+        - bearerAuth: []
+      parameters: 
+        - in: path
+          name: userId 
+          required: true
+          description: update user by needed userId
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: 
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                userName:
+                  type: string
+      responses:
+        200:
+          description: user updated successfully  
+          content:
+            application/json:
+              schema: 
+                $ref: '#definations/schemas/userSchemaForGet'
+        401:
+          description: Unauthorized user
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        409:
+          description: conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        404:
+          description: user does not exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+  /users/{userId}/posts:
+    post:
+      summary: create post
+      tags: [Posts]
+      description: create post with needed userId and with details
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: userId 
+          required: true
+          description: update post by needed userId
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: 
+              type: object
+              required:
+                - title
+                - body
+              properties:
+                title:
+                  type: string
+                  description: title of the post
+                body:
+                  type: string
+                  description: body of the post
+      responses:
+        201:
+          description: post created successfully  
+          content: 
+            application/json:
+              schema: 
+                type: object
+                required:
+                  - status
+                  - message
+                  - data
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data: 
+                    type: object
+                    $ref: '#/definations/schemas/postSchema'
+                    
+        401:
+          description: Unauthorized user
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        404:
+          description: user does not exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+    get:
+      summary: get users posts
+      tags: [Posts]
+      description: get all posts by userId
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: userId 
+          required: true
+          description: get all post by needed userId
+      responses:
+        200:
+          description: posts fetched successfully  
+          content: 
+            application/json:
+              schema: 
+                type: object
+                required:
+                  - status
+                  - message
+                  - data
+                properties:
+                  status:
+                    type: string
+                  message: 
+                    type: string
+                  data: 
+                    type: array
+                    items:
+                      $ref: '#/definations/schemas/postSchema'
+        401:
+          description: Unauthorized user
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        404:
+          description: user does not exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+  /users/{userId}/posts/{postId}:
+    get:
+      summary: get user post
+      description: you can get single post of user with needed userId and postId
+      tags: [Posts]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+        - in: path
+          name: postId
+          required: true
+      responses:
+        200:
+          description: post fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                  - data
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    $ref: "#/definations/schemas/postSchema"
+        401:
+          description: Unauthorized user
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        404:
+          description: post does not exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+    put:
+      summary: update user post
+      description: you can update single post of user with needed userId and postId
+      tags: [Posts]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+        - in: path
+          name: postId
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: 
+              type: object
+              required:
+                - title
+                - body
+              properties:
+                title:
+                  type: string
+                  description: title of the post
+                body:
+                  type: string
+                  description: body of the post
+      responses:
+        200:
+          description: post updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                  - data
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    $ref: "#/definations/schemas/postSchema"
+        401:
+          description: Unauthorized user
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        404:
+          description: post does not exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+    delete:
+      summary: delete user post
+      description: you can delete single post of user with needed userId and postId
+      tags: [Posts]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+        - in: path
+          name: postId
+          required: true
+      responses:
+        200:
+          description: post deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+        401:
+          description: Unauthorized user
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        404:
+          description: post does not exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+
+  /users/{userId}/posts/{postId}/comments:
+    get:
+      summary: get post Comments
+      description: you can get Comments of single post with needed userId and postId
+      security:
+        - bearerAuth: []
+      tags: [Comments]
+      parameters:
+        - in: path
+          name: userId
+          required: true
+        - in: path
+          name: postId
+          required: true
+      responses:
+        200:
+          summary: success
+          description: comments fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                  - data
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        _id:
+                          type: string
+                        comment:
+                          type: string
+                        user:
+                          type: string
+                        post:
+                          type: string
+        401:
+          description: Unauthorized user
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        404:
+          description: post does not exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+    post:
+      summary: create comment on post
+      description: you can create Comment on single post with needed userId and postId
+      tags: [Comments]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: userId
+          required: true
+        - in: path
+          name: postId
+          required: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comment:
+                  type: string
+      responses:
+        201:
+          description: comment created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                      user:
+                        type: string
+                      post:
+                        type: string
+                      comment:
+                        type: string
+        401:
+          description: Unauthorized user
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        404:
+          description: post does not exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+
+  /users/{userId}/posts/{postId}/comments/{commentId}:
+    get:  
+      summary: get post Comment
+      description: you can get single Comment of single post with needed userId , postId and commentId
+      security:
+        - bearerAuth: []
+      tags: [Comments]
+      parameters:
+        - in: path
+          name: userId
+          required: true
+        - in: path
+          name: postId
+          required: true
+        - in: path
+          name: commentId
+          required: true
+      
+      responses:
+        200:
+          summary: success
+          description: comments fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                  - data
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                      comment:
+                        type: string
+                      user:
+                        type: string
+                      post:
+                        type: string
+        401:
+          description: Unauthorized user
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        404:
+          description: post does not exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+
+    delete:  
+      summary: delete post Comment
+      description: you can delete single Comment of single post with needed userId , postId and commentId
+      security:
+        - bearerAuth: []
+      tags: [Comments]
+      parameters:
+        - in: path
+          name: userId
+          required: true
+        - in: path
+          name: postId
+          required: true
+        - in: path
+          name: commentId
+          required: true
+      responses:
+        200:
+          summary: success
+          description: comments deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+        401:
+          description: Unauthorized user
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        404:
+          description: post does not exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+    put:  
+      summary: update post Comment
+      description: you can update single Comment of single post with needed userId , postId and commentId
+      security:
+        - bearerAuth: []
+      tags: [Comments]
+      parameters:
+        - in: path
+          name: userId
+          required: true
+        - in: path
+          name: postId
+          required: true
+        - in: path
+          name: commentId
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: true
+              properties:
+                comment:
+                  type: string
+      responses:
+        200:
+          summary: success
+          description: comment update successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                  - data
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      _id:
+                        type: string
+                      comment:
+                        type: string
+                      user:
+                        type: string
+                      post:
+                        type: string
+        401:
+          description: Unauthorized user
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        404:
+          description: post does not exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/definations/failureResponse"
+
+
+
+
+definations:
+  schemas:
+    userSchemaForGet:
+      type: object
+      required:
+        - status
+        - message
+        - data
+      properties:
+        status:
+          type: string
+        message: 
+          type: string
+        data:
+          type: object
+          required:
+            - name
+            - userName
+            - email
+            - role
+          properties:
+            name:
+              type: string
+              description: this is user name
+            userName:
+              type: string
+              description: this is userName must be unique
+            email:
+              type: string
+              description: this is user email
+            role:
+              type: string
+              description: this is user role
+    userSchemaForCreateUser:
+      type: object
+      required:
+        - name
+        - userName
+        - email
+        - password
+        - confirm_password
+      properties:
+        name:
+          type: string
+          description: this is user name
+        userName:
+          type: string
+          description: this is userName must be unique
+        email:
+          type: string
+          description: this is user email
+        password:
+          type: string
+          description: this is user password
+        confirm_password:
+          type: string
+          description: this is user confirm_password
+    postSchema:
+      type: object
+      required:
+        - _id
+        - title
+        - body
+      properties:
+        _id:
+          type: string
+          description: id of the post
+        title:
+          type: string
+          description: title of the post
+        body:
+          type: string
+          description: body of the post
+  failureResponse:
+    type: object
+    properties:
+      status:
+        type: string
+      error:
+        type: object
+        properties:
+          statusCode:
+            type: string
+          message:
+            type: string 
+  successResponse:
+    type: object
+    properties:
+      status:
+        type: string
+      success:
+        type: object
+        properties:
+          statusCode:
+            type: string
+          message:
+            type: string 
